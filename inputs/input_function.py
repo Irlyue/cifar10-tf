@@ -80,6 +80,7 @@ class Cifar10DataSet(object):
             image = tf.image.resize_image_with_crop_or_pad(image, 40, 40)
             image = tf.random_crop(image, [HEIGHT, WIDTH, DEPTH])
             image = tf.image.random_flip_left_right(image)
+        image = (image - 125.) / 255.
         return image
 
     @staticmethod
