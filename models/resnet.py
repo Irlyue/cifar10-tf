@@ -37,7 +37,7 @@ class ResNet(base.BaseNetwork):
             with slim.arg_scope([slim.batch_norm], is_training=self.train_mode()):
                 out = self._conv2d(out, 64, 3, 1)
                 out = self.stage_fn(out, 64, blocks[0], 1, 'stage-1')
-                out = self.stage_fn(out, 128, blocks[2], 2, 'stage-2')
+                out = self.stage_fn(out, 128, blocks[1], 2, 'stage-2')
                 out = self.stage_fn(out, 256, blocks[2], 2, 'stage-3')
                 out = self.stage_fn(out, 512, blocks[3], 2, 'stage-4')
 
