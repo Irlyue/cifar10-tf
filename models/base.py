@@ -21,3 +21,11 @@ class BaseNetwork:
     def pred_mode(self):
         return tf.estimator.ModeKeys.PREDICT == self.mode
 
+
+BATCH_NORM_PARAMS = {
+    'decay': 0.997,
+    'epsilon': 1e-5,
+    'scale': True,
+    'updates_collections': tf.GraphKeys.UPDATE_OPS,
+    'fused': None,
+}
