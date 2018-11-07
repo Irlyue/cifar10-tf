@@ -16,26 +16,15 @@ class ResNet(base.BaseNetwork):
         super().__init__(n_classes, name='resnet-%d' % n_layers)
         self.n_layers = n_layers
 
-    def _conv2d(self, _inx, _n, _k, _s, _scope=None):
-        return slim.conv2d(_inx,
-                           stride=_s,
-                           num_outputs=_n,
-                           kernel_size=_k,
-                           scope=_scope,
-                           padding='SAME',
-                           weights_regularizer=slim.l2_regularizer(self.params['wd']),
-                           activation_fn=tf.nn.relu,
-                           normalizer_fn=slim.batch_norm,
-                           normalizer_params=base.BATCH_NORM_PARAMS)
-
     def __call__(self, features, labels, mode, params):
         self.on_call(features, labels, mode, params)
         out = features
         blocks = RESNET[self.n_layers]
         self.in_planes = 64
         with tf.variable_scope(self.name):
-            with slim.arg_scope([slim.batch_norm], is_training=self.train_mode()):
-                out = self._conv2d(out, 64, 3, 1)
+            with slim.arg_scope([slim.batch_norm], is_training=self.train_mode()),\
+                    base.conv2d_arg_scope(self.params['wd']):
+                out = slim.conv2d(out, 64, 3, 1)
                 out = self.stage_fn(out, 64, blocks[0], 1, 'stage-1')
                 out = self.stage_fn(out, 128, blocks[1], 2, 'stage-2')
                 out = self.stage_fn(out, 256, blocks[2], 2, 'stage-3')
@@ -46,15 +35,16 @@ class ResNet(base.BaseNetwork):
         return out
 
     def bottleneck(self, x, in_dim, planes, stride=1):
-        out = self._conv2d(x, planes, 1, 1)
-        out = self._conv2d(out, planes, 3, stride)
-        out = self._conv2d(out, planes * 4, 1, 1)
+        out = slim.conv2d(x, planes, 1, 1)
+        out = slim.conv2d(out, planes, 3, stride)
+        out = slim.conv2d(out, planes * 4, 1, 1, activation_fn=None, normalizer_fn=None)
 
         if stride != 1 or in_dim != planes * 4:
-            shortcut = self._conv2d(x, planes * 4, 1, stride, 'shortcut')
+            shortcut = slim.conv2d(x, planes * 4, 1, stride, activation_fn=None, normalizer_fn=None,
+                                   scope='shortcut')
         else:
             shortcut = x
-        out = out + shortcut
+        out = slim.batch_norm(out + shortcut, activation_fn=tf.nn.relu)
         return out
 
     def stage_fn(self, x, planes, n_blocks, stride, scope='stage'):

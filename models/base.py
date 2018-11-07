@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
 
 
 class BaseNetwork:
@@ -29,3 +30,12 @@ BATCH_NORM_PARAMS = {
     'updates_collections': tf.GraphKeys.UPDATE_OPS,
     'fused': None,
 }
+
+
+def conv2d_arg_scope(wd):
+    return slim.arg_scope([slim.conv2d],
+                          padding='SAME',
+                          weights_regularizer=slim.l2_regularizer(wd),
+                          normalizer_fn=slim.batch_norm,
+                          normalizer_params=BATCH_NORM_PARAMS,
+                          activation_fn=tf.nn.relu)
